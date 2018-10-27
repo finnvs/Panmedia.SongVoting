@@ -1,0 +1,20 @@
+﻿<Placement>
+  <Place Parts_Poll_Edit="Content:1"/>
+  <Match DisplayType="Detail">
+    <Place Parts_Poll="Content:10"/>
+  </Match>
+  <Match DisplayType="Summary">
+    <Place Parts_Poll="Meta:10"/>
+  </Match>
+  <Match DisplayType="SummaryAdmin">
+    <Place Parts_Poll_Admin_Summary="Meta:10"/>
+  </Match>
+
+  <Place Parts_Song_Edit="Content:1"/>  
+  <Match DisplayType="Summary">
+    <Place Parts_Song="Meta:10"/>
+  </Match>
+  <Match DisplayType="SummaryAdmin">
+    <Place Parts_Song_Admin_Summary="Meta:10"/>
+  </Match>
+</Placement>

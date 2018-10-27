@@ -1,0 +1,6 @@
+﻿a#myForm_remove_current {
+    background: url(Images/cross.png);
+    background-repeat: no-repeat !important;
+    line-height: 16px;
+    text-indent: -5000px;
+}

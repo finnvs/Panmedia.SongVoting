@@ -1,0 +1,62 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+@using Panmedia.SongVoting.Models;
+
+@{    
+    Script.Require("jQuery");
+    Script.Require("JQPlotPlugin");
+    Script.Include("Plugins/jqplot.categoryAxisRenderer.min.js");
+    Script.Include("Plugins/jqplot.barRenderer.min.js");
+    Script.Include("Plugins/jqplot.canvasAxisTickRenderer.min.js");
+    Style.Require("JQPlotStyle");
+
+    var height = String.Format("{0}px", Model.Choices.Count * 40);
+}
+
+<div>
+    <div id="chart" style="width: 200px; height: @height;"></div>
+</div>
+
+@using (Script.Foot())
+{
+
+    IList<PollResultEntry> results = Model.Choices;
+    
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var line = [
+                    @foreach (PollResultEntry entry in Model.Choices)
+                    {
+                        <text>
+                        [@entry.Result.Count,'@Html.Raw(entry.Choice.Answer)']
+                        @if (results.Last() != entry)
+                        {
+                            <text>,</text>
+                        }
+                        </text>
+                    }
+            ];
+
+            $('#chart').jqplot([line], {
+                title: '@Model.Question',
+                animate: true,
+                seriesDefaults: {
+                    renderer: $.jqplot.BarRenderer,
+                    rendererOptions: {
+                        // Set the varyBarColor option to true to use different colors for each bar.
+                        // The default series colors are used.
+                        varyBarColor: true,
+                        barDirection: 'horizontal'
+                    },            
+                    pointLabels: { show: true, location: 'e', edgeTolerance: -15, format: "%s" },
+                    yaxis: 'y2axis'
+                },
+                axes: {
+                    y2axis: {
+                        renderer: $.jqplot.CategoryAxisRenderer,
+                        location: 'e'
+                    }
+                }
+            });
+        });
+    </script>
+}

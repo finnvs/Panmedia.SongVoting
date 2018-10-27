@@ -1,0 +1,13 @@
+﻿Name: Panmedia.SongVoting
+AntiForgery: enabled
+Author: Panmedia ApS
+Website: http://www.panmedia.dk
+Version: 1.0
+OrchardVersion: 1.0
+Description: An Advanced Poll Module for Orchard CMS
+Features:
+    Panmedia.SongVoting:
+		Name: Panmedia Song Voting
+        Description: Song Voting module built on adapted Advanced Poll Module for Orchard CMS
+        Dependencies: Orchard.Autoroute
+		Category: Panmedia Tools

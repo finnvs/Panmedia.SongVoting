@@ -1,0 +1,35 @@
+﻿@using Orchard.ContentManagement;
+@using Panmedia.SongVoting.ViewModels;
+@using Panmedia.SongVoting.Models;
+
+@model IEnumerable<PollPart>
+
+
+@if (Model == null || Model.Count() < 1)
+{
+    <p>@T("Ingen lukkede afsteminger.")</p>
+}
+else
+{
+   
+    <p><label>@T("Lukkede afsteminger:")</label></p>
+    <ul class="content-items">
+        @foreach (var poll in Model) // var or dynamic
+        {
+            string title = poll.ContentItem.Content.TitlePart.Title;
+            ContentItem item = poll.ContentItem;
+            <li class="content-item-summary">
+                @T("Afstemning: ")
+                @*Itemlink: - kald til Orchards standard rendering engine via Contents/Item/Display/338*@
+                @*link er..http://localhost:30321/OrchardLocal/Contents/Item/Display/338*@
+                @*@Html.ItemDisplayLink(title, item)*@
+                @*Actionlink: - kald til specifik controller, for håndtering af 'user voting' scenarier*@
+                @*link er..http://localhost:30321/OrchardLocal/Panmedia.SongVoting/Vote/GetPoll?pollId=338*@
+                @Html.ActionLink(title, "GetClosedPoll", "Vote", new { pollId = poll.ContentItem.Id }, null)
+                &nbsp; &nbsp; @T("( Åbnede:  " + poll.OpenDateUtc)
+                &nbsp;@T("og blev lukket:  " + poll.CloseDateUtc + " )")
+            </li>
+
+        }
+    </ul>
+}

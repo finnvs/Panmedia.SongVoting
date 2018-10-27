@@ -1,0 +1,176 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+@using Panmedia.SongVoting.Models;
+@using Orchard.Mvc.Html;
+@using Orchard.Utility.Extensions;
+
+<h1>@Model.PollTitle</h1>
+
+@if (Model.IsShown)
+{
+    Script.Require("JQuery");
+
+    if (Model.IsOpen)
+    {
+        <span id="AdvancedPoll_Error"></span>
+        if (WorkContext.CurrentCulture == "da-DK")
+        {
+            <text>
+                Årets sang / Årets Cowrite
+                <br />
+                <br />
+                Prisen for årets sang går til den person / de personer i ÅSV der har skrevet årets hit / cowrite i 2017 i ÅSV.
+                <br />
+                Du kan nominere 1 af dine egne sange. Man skal være betalende medlem af ÅSV for at nominere en sang.
+                Afstemningen er hemmelig, og resultatet offentliggøres ikke før prisuddelingen.
+                Alle der har oprettet en profil her på siden kan stemme, men man kan ikke stemme på sin egen sang.
+                Dog kan man i hele afstemningsperioden flytte sin stemme til en anden sang hvis man fortryder.
+                <br />
+                <br />
+                Du kan nominere nu, og du kan stemme fra 8. jan til 14. jan. ÅSE Awards afholdes den 17. januar 2018.                    
+                <br />
+                For mere info om priserne, klik <a href="http://sang-skriver.azurewebsites.net/da-dk/asv-prisen" target="_blank">HER.</a>
+                <br />
+                <br />
+            </text>
+        }
+        else
+        {
+            <text>
+                Song of the year / Cowrite of the year
+                <br />
+                <br />
+                Which of the nominated songs from Denmark do you think is the best?
+                <br />
+                Listen to all of them below and mark your choice from the 1st of January. Voting is secret, and the
+                results won't be made public before the prize ceremony on january 17th, 2018.
+                <br />
+                If you can read this, you can nominate a song and later vote - for up to five songs in each category, though not for a song you wrote.
+                During the voting period, from 8th of jan until midnight on the 14th of jan 2018, you can switch your vote to another song any time you wish.
+                All voting ends at midnight on jan 14 th.
+                <br />
+                For more info about the awards, click <a href="http://sang-skriver.azurewebsites.net/en-us/asv-awards" target="_blank">HERE.</a>
+                <br />
+                <br />
+            </text>
+        }
+        <div id="PollContainer">
+            <label>@Model.Question</label>
+            <br />
+            <br />
+
+            @foreach (ChoiceEntry c in @Model.Choices)
+            {
+                <div class="row">
+                    <div class="col-sm-5">
+                        <label for="answer @c.Choice.Id" style="display: inline; margin-left: 5px">@c.Choice.Answer</label>
+                    </div>
+                    <div class="col-sm-2">
+                        @if (Model.IsMusicPoll)
+                        {
+                            <!-- Button trigger modal med actionlink / uden actionlink. Bruges et actionlink, skal routing entry først slettes i Routes.cs -->
+                            var actionLinkModal = Url.Action("SongModalPopUp", "Song", new { Area = "Panmedia.SongVoting", choiceItemId = c.Choice.Id });
+                            @*<a href="@actionLinkModal" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">*@
+                            @*<a href="~/Song/Songmodal/?choiceItemId=@a.Id" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">
+                                    @T("Hør sangen")
+                                </a>*@
+                            <span class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal" onclick="loadSongModal(@c.Choice.Id)">
+                                @T("Hør sangen")
+                            </span>
+                        }
+                    </div>
+                    @if (c.Song != null)
+                    {
+                        if (c.Song.SongEditorUserName == HttpContext.Current.User.Identity.Name)
+                        { // display a button / actionlink to edit and delete song, if it was uploaded by current user
+                            <div class="col-sm-2">
+                                @Html.ActionLink(T("Ret Sang"), "EndUserEdit",
+                            new
+                            {
+                                Controller = "Song",
+                                Area = "Panmedia.SongVoting",
+                                Id = c.Song.Id,
+                                returnUrl = @ViewContext.RequestContext.HttpContext.Request.ToUrlString()
+                            },
+                                new { @class = "btn btn-info" }
+                                )
+                            </div>
+                            <div class="col-sm-3">
+                                @Html.ActionLink(T("Slet"), "Delete",
+                            new
+                            {
+                                Controller = "Song",
+                                Area = "Panmedia.SongVoting",
+                                Id = c.Song.Id,
+                                returnUrl = @ViewContext.RequestContext.HttpContext.Request.ToUrlString()
+                            },
+                                new { @class = "btn btn-info" }
+                                )
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-sm-5">
+
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="col-sm-5">
+
+                        </div>
+                    }
+                </div>
+                <br />
+            }
+
+        </div>
+    }
+    else
+    {
+        <p>Afstemningen er skjult indtil startdato!</p>
+        <p>Poll is hidden until start date!</p>
+    }
+        <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-content"></div>
+    </div>
+        <!-- /.modal -->
+   
+}
+else
+{
+    <p>Afstemningen er desværre lukket for deltagelse!</p>
+    <p> Poll is closed!</p>
+    using (Script.Foot())
+    {
+        <script type="text/javascript">
+            $(document).ready(function () {
+                // loadPollResult();
+            });
+        </script>
+    }
+}
+
+@using (Script.Foot())
+{
+    <script type="text/javascript">
+        function loadSongModal(id) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("SongModalPopUp", "Song", new { area = "Panmedia.SongVoting" })',
+                traditional: true,
+                data: {
+                    choiceItemId: id,
+                    __RequestVerificationToken: '@Html.AntiForgeryTokenValueOrchard()'
+                },
+            }).done(function (response) {
+                // alert(response);
+                $('#myModal .modal-content').html(response);
+                return;
+            })
+        }
+    </script>
+}
+
+

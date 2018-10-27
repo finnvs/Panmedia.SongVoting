@@ -1,0 +1,60 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+@model SongViewModel
+
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onclick="shutdownVideo()">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">@Model.SongTitle</h4>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-sm-4">
+                    Titel:<br />
+                    @Model.SongTitle<br />
+                    - skrevet af: @Model.SongAuthor
+                </div>
+                @*<div class="col-sm-4">
+                    Sang Kategori:<br />
+                    @Model.SongCategory
+                </div>*@
+                <div class="col-sm-8">
+                    Beskrivelse: <br />
+                    @Model.SongDescription
+                </div>
+            </div>
+            <p>
+                @if(Model.SongUrl.Contains("youtube")) { 
+                <br />                
+                <div class="embed-responsive embed-responsive-16by9">
+                    <iframe width="300" height="150" class="embed-responsive-item" src="@Model.SongUrl"></iframe>
+                </div>
+                }
+                else if (Model.SongUrl.Contains("iframe"))
+                {                   
+                    <br />                    
+                    <div>
+                        @Html.Raw(Model.SongUrl)                        
+                    </div>
+                }
+                else
+                {
+                    <br />
+                    <div>
+                        <a href="@Model.SongUrl" target="_blank">Open soundcloud track / other media in new pane</a>
+                    </div>
+                }
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal" onclick="shutdownVideo()">Luk</button>
+        </div>
+    </div><!-- /.modal-content -->
+</div><!-- /.modal-dialog -->
+
+<script type="text/javascript">
+    function shutdownVideo() {
+        // console.log("shutting video sound down");
+        $("#myModal iframe").attr("src", $("#myModal iframe").attr("src"));
+    }
+</script>

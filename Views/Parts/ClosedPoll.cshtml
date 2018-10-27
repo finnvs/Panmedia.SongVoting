@@ -1,0 +1,96 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+@using Panmedia.SongVoting.Models;
+@using Orchard.Mvc.Html;
+@using Orchard.Utility.Extensions;
+
+<h1>@Model.PollTitle</h1>
+
+@if (Model.IsShown)
+{
+    Script.Require("JQuery");
+
+    if (!Model.IsOpen)
+    {
+        <span id="AdvancedPoll_Error"></span>
+        <div id="PollContainer">
+            @*<label>@Model.Question</label>*@
+            <label>@T("Denne afstemning er nu lukket, men du kan stadig høre de nominerede sange.")</label>
+            <br />
+            <label>@T("This poll is now closed, but you can still hear the nominated songs.")</label>            
+            <br />
+            <br />
+            @foreach (ChoiceEntry c in @Model.Choices)
+            {
+                <div class="row">
+                    <div class="col-sm-5">
+                        <label for="answer @c.Choice.Id" style="display: inline; margin-left: 5px">@c.Choice.Answer</label>
+                    </div>
+                    <div class="col-sm-7">
+                        @if (Model.IsMusicPoll)
+                        {
+                            <!-- Button trigger modal med actionlink / uden actionlink. Bruges et actionlink, skal routing entry først slettes i Routes.cs -->
+                            var actionLinkModal = Url.Action("SongModalPopUp", "Song", new { Area = "Panmedia.SongVoting", choiceItemId = c.Choice.Id });
+                            @*<a href="@actionLinkModal" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">*@
+                            @*<a href="~/Song/Songmodal/?choiceItemId=@a.Id" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">
+                                    @T("Hør sangen")
+                                </a>*@
+                            <span class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal" onclick="loadSongModal(@c.Choice.Id)">
+                                @T("Hør sangen")
+                            </span>
+                        }
+                    </div>
+                                       
+                </div>
+                <br />
+            }
+
+        </div>
+    }
+    else
+    {
+        <p>Afstemningen er tilsyneladende stadig åben - kontakt venligst webmaster@sang-skriver.azurewebsites.net</p>
+        <p>The Poll is apparently still open - please contact webmaster@sang-skriver.azurewebsites.net</p>
+    }
+        <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-content"></div>
+    </div>
+        <!-- /.modal -->
+   
+}
+else
+{
+    <p>Afstemningen er desværre lukket for deltagelse!</p>
+    <p> Poll is closed!</p>
+    using (Script.Foot())
+    {
+        <script type="text/javascript">
+            $(document).ready(function () {
+                // loadPollResult();
+            });
+        </script>
+    }
+}
+
+@using (Script.Foot())
+{
+    <script type="text/javascript">
+        function loadSongModal(id) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("SongModalPopUp", "Song", new { area = "Panmedia.SongVoting" })',
+                traditional: true,
+                data: {
+                    choiceItemId: id,
+                    __RequestVerificationToken: '@Html.AntiForgeryTokenValueOrchard()'
+                },
+            }).done(function (response) {
+                // alert(response);
+                $('#myModal .modal-content').html(response);
+                return;
+            })
+        }
+    </script>
+}
+
+

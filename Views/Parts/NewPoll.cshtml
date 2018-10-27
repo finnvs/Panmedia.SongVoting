@@ -1,0 +1,286 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+@using Panmedia.SongVoting.Models;
+
+<h1>@Model.PollTitle</h1>
+
+@if (Model.IsShown)
+{
+
+    Script.Require("JQuery");
+    Script.Require("JQPlotPlugin");
+    Script.Include("Plugins/jqplot.categoryAxisRenderer.min.js");
+    Script.Include("Plugins/jqplot.barRenderer.min.js");
+    Script.Include("Plugins/jqplot.canvasAxisTickRenderer.min.js");
+    Script.Include("Plugins/jqplot.highlighter.min.js");
+    Script.Include("jquery.tipsy.js");
+    Script.Include("toastr.min.js").AtFoot();
+    Style.Include("tipsy.css");
+    Style.Require("JQPlotStyle");
+    Style.Include("Styles/toastr.min.css").AtHead();
+
+    var height = String.Format("{0}px", Model.Choices.Count * 50);
+    <div>
+        <div id="chart" style="width: 150px; height: @height; display: none"></div>
+    </div>
+
+    if (Model.IsOpen)
+    {
+        Script.Require("MD5");
+        Script.Require("FingerPrint");
+        
+        <span id="AdvancedPoll_Error"></span>
+        if (WorkContext.CurrentCulture == "da-DK")
+        {
+            <text>
+                Årets sang / Årets Cowrite
+                <br />
+                <br />
+                Hvilke sange herunder synes du fortjener æren af at blive 'Årets Sang' 2017?
+                <br />
+                <br />                
+                Lyt til alle sangene, og stem på op til fem. Du stemmer ved at sætte flueben ud for en sang, og trykke på knappen 'Save Votes' nederst på siden. 
+                <br />
+                Undlad at stemme på en sang, du selv har været med til at skrive.
+                <br />
+                <br />
+                Afstemingerne lukker ved midnat den 14. Januar (11 pm Greenwich time). Du kan ændre i dine afgivne stemmer indtil det tidspunkt.
+                <br />
+                Afstemningen er hemmelig, og vinderne bliver ikke afsløret før ved prisoverrækkelsen i Aarhus den 17. Januar, 2018.
+                <br />
+                <br />
+                For mere info om priserne, klik <a href="http://sang-skriver.azurewebsites.net/da-dk/asv-prisen" target="_blank">HER.</a>                
+                <br />
+                <br />
+                <br />
+            </text>
+        }
+        else
+        {
+            <text>
+                Song of the year / Cowrite of the year
+                <br />
+                <br />
+                Which of the AASV songs below deserve to be honored as the best of 2017?
+                <br />
+                <br />
+                Please listen to all the songs and vote for up to five. You vote by setting a checkmark, and then clicking on the button 'Save Votes' at the bottom of the page.
+                <br />
+                Do not vote for any songs you helped to write.
+                <br />
+                <br />
+                The polls close at midnight on January 14th (11 pm Greenwich time). You may change your vote(s) at any time before then. 
+                <br />                
+                Voting is secret, and the winners won't be announced until the prize ceremony in Aarhus on January 17th, 2018.
+                <br />
+                <br />
+                For more info about the awards (in Danish, sorry) click <a href="http://sang-skriver.azurewebsites.net/da-dk/asv-prisen" target="_blank">HERE.</a>
+                <br />
+                <br />
+                <br />
+            </text>
+        }
+        <div id="PollContainer">
+            <label>@Model.Question</label>
+            <br />
+            <br />
+            @using (Html.BeginFormAntiForgeryPost())
+            {
+
+                foreach (PollChoiceRecord a in @Model.Choices)
+                {
+                    <div class="row">
+                        <div class="col-sm-5">
+                            <input type="checkbox" id="answer @a.Id" style="margin-bottom: 4px" /><label for="answer @a.Id" style="display: inline; margin-left: 5px">@a.Answer</label>
+                        </div>
+                        <div class="col-sm-7">
+                            @if (Model.IsMusicPoll)
+                            {
+                                <!-- Button trigger modal med actionlink / uden actionlink. Bruges et actionlink, skal routing entry først slettes i Routes.cs -->
+                                var actionLinkModal = Url.Action("SongModalPopUp", "Song", new { Area = "Panmedia.SongVoting", choiceItemId = @a.Id });
+                                @*<a href="@actionLinkModal" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">*@
+                                @*<a href="~/Song/Songmodal/?choiceItemId=@a.Id" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">
+                                        Hør sangen
+                                    </a>*@
+                                <span class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal" onclick="loadSongModal(@a.Id)">
+                                    Hør sangen
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <br />
+                }
+                <button type="submit" id="PollSubmit">@T("Save Votes")</button>
+            }
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-content"></div>
+        </div>
+        <!-- /.modal -->
+
+
+        using (Script.Foot())
+        {
+            <script type="text/javascript">
+                $(document).ready(function () {
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("CanVote", "Vote", new { area = "Panmedia.SongVoting", id = @Model.Id })',
+                        traditional: true,
+                        data: {
+                            fingerPrint: $.fingerprint(),
+                            __RequestVerificationToken: '@Html.AntiForgeryTokenValueOrchard()'
+                        }
+                    }).done(function (response) {
+                        if (response.canVote) {
+                            $('#PollSubmit').parent().submit(function (event) {
+                                event.preventDefault();
+                                var t = new Array();
+                                $('#PollContainer').find('input:checkbox:checked').each(function () {
+                                    t.push($(this).attr('id').replace("answer ", ""));
+                                });
+                                $.ajax({
+                                    type: "POST",
+                                    url: '@Url.Action("Vote", "Vote", new { area = "Panmedia.SongVoting", id = @Model.Id })',
+                                    traditional: true,
+                                    data: {
+                                        fingerPrint: $.fingerprint(),
+                                        votes: t,
+                                        __RequestVerificationToken: '@Html.AntiForgeryTokenValueOrchard()'
+                                    }
+                                }).done(function (response) {
+                                    if (!response.success)
+                                        //alert(response.error);
+                                        //$('#AdvancedPoll_Error').html(response.error);
+                                        toastr.info(response.error);
+                                    else {
+                                        toastr.info("Tak for din stemme!");
+                                        //alert("Thanks for voting!");
+                                        // $('#AdvancedPoll_Error').html("Thanks for voting!");
+                                        // $('#PollContainer').html('');
+                                        location.reload();
+                                        // loadPollResult();
+                                    }
+                                }).fail(function (jqXHR, textStatus) {
+                                    toastr.info(textStatus);
+                                    // alert(textStatus);
+                                });
+                            });
+
+                            $('#PollContainer').find('input:checkbox').change(function () {
+                                var num = $('#PollContainer').find('input:checkbox:checked').size();
+                                if (num >= '@Model.MaxVotes') {
+                                    $('#PollContainer').find('input:checkbox:not(:checked)').each(function () {
+                                        $(this).attr('disabled', 'disabled');
+                                    });
+                                }
+                                else {
+                                    $('#PollContainer').find('input:checkbox:not(:checked)').each(function () {
+                                        $(this).removeAttr('disabled');
+                                    });
+                                }
+                            });
+                        }
+                        else {
+                            // loadPollResult();
+                        }
+                    });
+                });
+            </script>
+        }
+    }
+    else
+    {
+        <p>Afstemningen er desværre lukket for deltagelse!</p>
+        <p>Poll is closed!</p>
+        using (Script.Foot())
+        {
+            <script type="text/javascript">
+                $(document).ready(function () {
+                    // loadPollResult();
+                });
+            </script>
+        }
+    }
+
+
+
+    using (Script.Foot())
+    {
+        <script type="text/javascript">
+            function loadSongModal(id) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("SongModalPopUp", "Song", new { area = "Panmedia.SongVoting" })',
+                    traditional: true,
+                    data: {
+                        choiceItemId: id,
+                        __RequestVerificationToken: '@Html.AntiForgeryTokenValueOrchard()'
+                    },
+                }).done(function (response) {
+                    // alert(response);
+                    $('#myModal .modal-content').html(response);
+                    return;
+                })
+            };
+            function loadPollResult() {
+                $.ajax({
+                    type: "GET",
+                    url: '@Url.Action("GetResult", "Vote", new { area = "Panmedia.SongVoting", id = @Model.Id })',
+                    traditional: true,
+                    data: {}
+                }).done(function (response) {
+                    $('#chart').show();
+                    $('#PollContainer').hide();
+                    var line = response.result;
+                    $('#chart').jqplot([line], {
+                        title: '@Model.Question',
+                        animate: true,
+                        showTooltip: true,
+                        gridPadding: { right: 0, left: 0 },
+                        seriesDefaults: {
+                            renderer: $.jqplot.BarRenderer,
+                            rendererOptions: {
+                                // Set the varyBarColor option to true to use different colors for each bar.
+                                // The default series colors are used.
+                                varyBarColor: true,
+                                barDirection: 'horizontal'
+                            },
+                            pointLabels: { show: true, location: 'e', edgeTolerance: -15, format: "%s" },
+                            yaxis: 'y2axis'
+                        },
+                        axes: {
+                            y2axis: {
+                                renderer: $.jqplot.CategoryAxisRenderer,
+                                location: 'e',
+                                rendererOptions: { sortMergedLabels: true },
+                                pad: 1.05,
+                                tickOptions: {
+                                    formatString: '<span title="%s">%s</span>',
+                                    showGridline: false,
+                                    markSize: 0
+                                }
+                            }
+                        },
+                        highlighter: {
+                            tooltipAxes: 'x',
+                            sizeAdjust: 10,
+                            show: true,
+                            tooltipLocation: 'n',
+                            useAxesFormatters: true
+                        }
+                    });
+                    $('.tickSpan').tipsy();
+                }).fail(function (jqXHR, textStatus) {
+                    toastr.info("error" + textStatus);
+                    // alert("error" + textStatus);
+                });
+            }
+        </script>
+    }
+}
+else
+{
+    <p>Poll is hidden!</p>
+}

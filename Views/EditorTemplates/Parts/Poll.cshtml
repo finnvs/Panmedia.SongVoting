@@ -1,0 +1,238 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+
+@model PollViewModel
+
+@{
+    Script.Require("jQuery").AtFoot();
+    Script.Require("jQueryUI").AtFoot();
+    Script.Require("jQueryUI_DatePicker").AtFoot();
+    Script.Require("jQueryUI_TimePicker").AtFoot();
+    Script.Require("jQueryUI_SliderAccess").AtFoot();
+    Script.Require("SheepItPlugin").AtFoot();    
+    Style.Require("jQueryUI").AtHead();
+    Style.Require("AdvancedPoll_Editor").AtHead();
+    Style.Require("jQueryUI_DatePicker").AtHead();
+    Style.Require("jQueryUI_TimePicker").AtHead();
+}
+
+<fieldset>
+    <legend>Afstemning</legend>
+    <div class="editor-label">
+        @Html.LabelFor(m => m.Question, @T("Spørgsmål"))
+    </div>
+    <div class="editor-field">
+        <input id="@Html.FieldIdFor(m => m.Question)" class="textMedium" type="text" placeholder="Question" value="@Model.Question" name="@Html.FieldNameFor(m => m.Question)" size="60" />
+        @*@Html.TextBoxFor(m => m.Question, new { @class = "form-control textMedium" })*@
+        @Html.ValidationMessageFor(m => m.Question)
+    </div>
+    <div class="editor-label">
+        @Html.LabelFor(m => m.Open, @T("Åben fra"))
+    </div>
+    @*<div class="editor-field">
+            @Html.EditorFor(m => m.Open)
+            @Html.ValidationMessageFor(m => m.Open)
+        </div>*@
+    <div>
+        <input type="text" value="@Model.Open" id="from-date-picker" name="PollPart.Open" />
+        @Html.ValidationMessageFor(m => m.Open)
+    </div>
+    <div class="editor-label">
+        @Html.LabelFor(m => m.Close, @T("Lukket fra"))
+    </div>
+    @*<div class="editor-field">
+            @Html.EditorFor(m => m.Close)
+            @Html.ValidationMessageFor(m => m.Close)
+        </div>*@
+    <div>
+        <input type="text" value="@Model.Close" id="to-date-picker" name="PollPart.Close" />
+        @Html.ValidationMessageFor(m => m.Close)
+    </div>
+
+    <div class="editor-label">
+        @Html.LabelFor(m => m.MaxVotes, @T("Maksimalt antal stemmer pr. bruger"))
+    </div>
+    <div class="editor-field">
+        <input id="@Html.FieldIdFor(m => m.MaxVotes)" class="text-small" type="text" value="@Model.MaxVotes" step="1" name="@Html.FieldNameFor(m => m.MaxVotes)" min="1" max="1000000" title="Maximum number of answers that user can choose"/>
+        @*@Html.EditorFor(m => m.MaxVotes)*@
+        @Html.ValidationMessageFor(m => m.MaxVotes)
+    </div>
+    <br />
+    <hr />
+    <br />
+    <div class="editor-label">
+        @Html.LabelFor(m => m.Shown, @T("Skal afstemningen være synlig for brugere?"))
+    </div>
+    <div class="editor-field">
+        @Html.CheckBoxFor(m => m.Shown, new { @checked = Model.Shown })
+        @Html.ValidationMessageFor(m => m.Shown)
+    </div>
+
+    <div class="editor-label">
+        @Html.LabelFor(m => m.ShowVotingUI, @T("Skal 'Vote' knappen vises? (Sæt afstemning i gang)"))
+    </div>
+    <div class="editor-field">
+        @Html.CheckBoxFor(m => m.ShowVotingUI, new { @checked = Model.ShowVotingUI })
+        @Html.ValidationMessageFor(m => m.ShowVotingUI)
+    </div>
+
+    <div class="editor-label">
+        @Html.LabelFor(m => m.MusicPoll, @T("Er dette en musikafstemning?"))
+    </div>
+    <div class="editor-field">
+        @Html.CheckBoxFor(m => m.MusicPoll, new { @checked = Model.MusicPoll })
+        @Html.ValidationMessageFor(m => m.MusicPoll)     
+    </div>
+
+    <div class="editor-label">
+        @Html.LabelFor(m => m.MusicPollInTestMode, @T("Test mode til / fra (kun for musikafstemning - tillader upload af mere end een sang pr bruger)"))
+    </div>
+    <div class="editor-field">
+        @Html.CheckBoxFor(m => m.MusicPollInTestMode, new { @checked = Model.MusicPollInTestMode })
+        @Html.ValidationMessageFor(m => m.MusicPollInTestMode)
+    </div>
+    <br />
+    <hr />
+    <br />
+
+    <!-- sheepIt Form -->
+    <div id="myForm">
+        <!-- Form template-->
+        <div id="myForm_template" class="AdvancedPoll_Answer">
+            <label for="myForm_#index#_Answer">Answer #index#</label>
+
+            <input id="myForm_#index#_Answer" name="PollPart.Choices[#index#].Choice.Answer" type="text" placeholder="Answer #index#" size="50" />
+            <input id="myForm_#index#_Id" name="PollPart.Choices[#index#].Choice.Id" type="hidden" />
+            <input id="myForm_#index#_Action" name="PollPart.Choices[#index#].Action" type="hidden" />          
+
+            <a id="myForm_remove_current">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+        <!-- /Form template-->
+        <!-- No forms template -->
+        <div id="myForm_noforms_template">No questions</div>
+        <!-- /No forms template-->
+        <!-- Controls -->
+        <div id="myForm_controls" class="controls">
+            <br />
+            <div id="myForm_add"><button><a><span>Add answer</span></a></button></div>
+            <br />
+            <div id="myForm_remove_last"><button><a><span>Remove</span></a></button></div>
+            <br />
+            <!--<div id="myForm_remove_all"><button><a><span>Remove All</span></a></button></div>-->
+            <div id="myForm_add_n">
+                <input id="myForm_add_n_input" type="text" size="4" />
+                <div id="myForm_add_n_button"><a><span>Add</span></a></div>
+            </div>
+        </div>
+        <!-- /Controls -->
+
+    </div>
+    <!-- /sheepIt Form -->
+</fieldset>
+
+@using (Script.Foot())
+{
+
+    <script type="text/javascript">
+        $('#from-date-picker').datetimepicker({
+            controlType: 'select',
+            oneLine: true,
+            dateFormat: 'yy-mm-dd',
+            timeFormat: 'HH:mm'
+        });
+        $('#to-date-picker').datetimepicker({
+            controlType: 'select',
+            oneLine: true,
+            dateFormat: 'yy-mm-dd',
+            timeFormat: 'HH:mm'
+        });
+    </script>
+   
+
+            <script type="text/javascript">
+                //<![CDATA[
+                $(document).ready(function () {
+                    var clearHint = function ($this) { if ($this.val() == $this.data("hint")) { $this.removeClass("hinted").val("") } };
+                    var resetHint = function ($this) { setTimeout(function () { if (!$this.val()) { $this.addClass("hinted").val($this.data("hint")) } }, 300) };
+                    @* todo: (heskew) make a plugin *@
+                    $("label.forpicker").each(function () {
+                        var $this = $(this);
+                        var pickerInput = $("#" + $this.attr("for"));
+                        if (!pickerInput.val()) {
+                            pickerInput.data("hint", $this.text());
+                            pickerInput.addClass("hinted")
+                                .val(pickerInput.data("hint"))
+                                .focus(function () { clearHint($(this)); })
+                                .blur(function () { resetHint($(this)); });
+                            $this.closest("form").submit(function () { clearHint(pickerInput); pickerInput = 0; });
+                        }
+                    });
+                    $("#@Html.FieldIdFor(m => m.Open)").datepicker({ showAnim: "" });
+                    $("#@Html.FieldIdFor(m => m.Close)").datepicker({ showAnim: "" });
+
+                    var initedAnswer = 0;
+
+                    var sheepItForm = $('#myForm').sheepIt({
+                        separator: '',
+                        allowRemoveLast: true,
+                        allowRemoveCurrent: true,
+                        allowRemoveAll: true,
+                        allowAdd: true,
+                        allowAddN: false,
+                        maxFormsCount: 50,
+                        minFormsCount: 1,
+                        iniFormsCount: 2,
+                        afterFill: function (source, form, values) {
+                            initedAnswer++;
+                        },
+                        afterAdd: function (source, newForm) {
+                            //var id = $(newForm).attr('id');
+                            //id = id.replace('myForm_template', '');
+                            //alert($(source).html());
+                            //alert($('#myForm_' + id + '_Id').attr('name'));
+                            if (initedAnswer == '@Model.Choices.Count') {
+                                var answer = $('.AdvancedPoll_Answer').last();
+                                var id = $(answer).attr('id');
+                                id = id.replace('myForm_template', '');
+                                $('#myForm_' + id + '_Id').attr('value', '0');
+                                $('#myForm_' + id + '_Action').attr('value', 'Create');
+                            }
+
+                            // Add events for focus to the new cloned form
+                            $(newForm).find('input').focus(function () {
+                                $(this).addClass("focus");
+                            });
+                            $(newForm).find('input').blur(function () {
+                                $(this).removeClass("focus");
+                            });
+
+                        },
+                        beforeAdd: function (source) {
+                            //alert('Before add form');
+                        },
+                        afterClone: function (source, clone) {
+                            //alert('After clone form');
+                        },
+                        beforeClone: function (source, template) {
+                            //alert('Before clone form');
+                        },
+                        data: [
+                                @foreach (var c in Model.Choices)
+                                {
+                                    <text>
+                                    {
+                                        'Id': '@Html.Raw(@c.Choice.Id.ToString())',
+                                        'Action': '@Html.Raw(@c.Action)',
+                                        'Answer': "@Html.Raw(@c.Choice.Answer)"
+                                    }
+                                    </text>
+                        if (Model.Choices.Last() != c)
+                        {
+                           <text>,</text>
+                        }
+                    }
+                        ]
+                    });
+                });
+                //]]>
+            </script>
+}

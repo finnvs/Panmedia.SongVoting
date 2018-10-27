@@ -1,0 +1,117 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+@using Orchard.Mvc.Html;
+@using Orchard.Utility.Extensions;
+
+@model SongIndexViewModel
+@{
+    Layout.Title = T("Songs").ToString();
+}
+
+@using (Html.BeginFormAntiForgeryPost())
+{
+    @Html.ValidationSummary()
+    <fieldset class="bulk-actions">
+        <label for="publishActions">@T("Actions:")</label>
+        <select id="publishActions" name="@Html.NameOf(m => m.Options.BulkAction)">
+            @Html.SelectOption(Model.Options.BulkAction, SongIndexBulkAction.None, T("Choose action...").ToString())
+            @Html.SelectOption(Model.Options.BulkAction, SongIndexBulkAction.Open, T("Open").ToString())
+            @Html.SelectOption(Model.Options.BulkAction, SongIndexBulkAction.Close, T("Close").ToString())
+            @Html.SelectOption(Model.Options.BulkAction, SongIndexBulkAction.Delete, T("Delete").ToString())
+        </select>
+        <button type="submit" name="submit.BulkEdit" value="@T("Apply")">@T("Apply")</button>
+    </fieldset>
+    <fieldset class="bulk-actions">
+        <label for="filterResults">@T("Filter:")</label>
+        <select id="filterResults" name="@Html.NameOf(m => m.Options.Filter)">
+            @Html.SelectOption(Model.Options.Filter, SongIndexFilter.All, T("All Songs").ToString())
+            @Html.SelectOption(Model.Options.Filter, SongIndexFilter.Open, T("Open Songs").ToString())
+            @Html.SelectOption(Model.Options.Filter, SongIndexFilter.Closed, T("Closed Songs").ToString())
+        </select>
+        <button type="submit" name="submit.Filter" value="@T("Apply")">@T("Apply")</button>
+    </fieldset>
+    <br />
+    <fieldset class="bulk-actions">
+        <a href="@Url.Action("Create", "Song", new { area = "Contents", id = "Song", returnUrl = @ViewContext.RequestContext.HttpContext.Request.ToUrlString() })">Create New Song</a>
+    </fieldset>
+    <fieldset>
+        <table class="items" summary="@T("This is a table of songs in your application")">
+            <colgroup>
+                <col id="Col1" />
+                <col id="Col2" />
+                <col id="Col3" />
+                <col id="Col4" />
+                <col id="Col5" />
+                <col id="Col6" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th scope="col">&nbsp;&darr;</th>
+                    <th scope="col">@T("Status")</th>
+                    <th scope="col">@T("Song Title")</th>
+                    <th scope="col">@T("Song Author(s)")</th>
+                    <th scope="col">@T("Info")</th>
+                    <th scope="col">@T("Actions")</th>
+                </tr>
+            </thead>
+            @{var songIndex = 0;}
+            <tbody>
+                @foreach (var songEntry in Model.Songs)
+                {
+                    <tr itemscope="itemscope" itemid="@songEntry.Song.Id" itemtype="http://panmedia.dk/data/Song">
+                        <td>
+                            <input type="hidden" value="@songEntry.Song.Id" name="@Html.NameOf(m => m.Songs[songIndex].Song.Id)"/>
+                            <input type="hidden" value="@songEntry.Song.SongTitle" name="@Html.NameOf(m => m.Songs[songIndex].Song.SongTitle)"/>
+                            <input type="checkbox" value="true" name="@Html.NameOf(m => m.Songs[songIndex].IsChecked)"/>
+                        </td>
+                        <td>
+                            @if (songEntry.Song.Shown)
+                            { @T("Open") }
+                            else
+                            { @T("Closed") }
+                        </td>
+                        <td>
+                            <div class="SongTitle" itemprop="SongTitle">@songEntry.Song.SongTitle</div>
+                        </td>
+                        <td>
+                            <div class="SongAuthor">@songEntry.Song.SongAuthor</div>
+                        </td>
+                        <td>
+                            <div class="Info">
+                                @if (songEntry.Song.Shown)
+                                {                                    
+                                    @T("Link : ")<a href="@songEntry.Song.SongUrl">YouTube</a>                                    
+                                }
+                                else
+                                {
+                                    @T("Song is hidden");
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                @*@if (songEntry.Song.Shown)
+                                {
+                                    <a href="@Url.Action("Close", new { songEntry.Song.Id, returnUrl = ViewContext.RequestContext.HttpContext.Request.ToUrlString() })" itemprop="CloseUrl UnsafeUrl">@T("Close")</a>@T(" | ")
+                                }
+                                else
+                                {
+                                    <a href="@Url.Action("Open", new { songEntry.Song.Id, returnUrl = ViewContext.RequestContext.HttpContext.Request.ToUrlString() })" itemprop="OpenUrl UnsafeUrl">@T("Open")</a>@T(" | ")
+                                }*@
+                                @*<a href="@Url.Action("Edit", new { area = "Contents", id = songEntry.Song.Id })" title="@T("Edit")">@T("Edit")</a>@T(" | ")*@
+                                @*<a href="@Url.Action("Edit", new { id = songEntry.Song.Id })" title="@T("Edit")">@T("Edit")</a>@T(" | ")*@
+                                @* kald til edit metoden på song controlleren istedet - vil returnere view direkte, uden save knap*@
+                                <a href="@Url.Action("Edit", "Song", new { area = "Panmedia.SongVoting", Id = songEntry.Song.Id, returnUrl = ViewContext.RequestContext.HttpContext.Request.ToUrlString() })" title="@T("Edit")">@T("Edit")</a>@T(" | ") 
+                                <a href="@Url.Action("DeleteFromAdminPanel", "Song", new { area = "Panmedia.SongVoting", Id = songEntry.Song.Id, returnUrl = ViewContext.RequestContext.HttpContext.Request.ToUrlString() })" itemprop="RemoveUrl UnsafeUrl">@T("Delete")</a> @*@T(" | ")*@
+                                @*<a href="@Url.Action("Details", new { songEntry.Song.Id, })">@T("Details")</a>@T(" | ")*@                                
+                            </div>
+                        </td>
+                    </tr>
+                                songIndex = songIndex + 1;
+                }
+            </tbody>
+        </table>
+        @Display(Model.Pager)
+
+
+    </fieldset>
+}

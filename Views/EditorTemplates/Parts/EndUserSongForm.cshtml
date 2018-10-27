@@ -1,0 +1,100 @@
+﻿@using Panmedia.SongVoting.Models;
+@using Panmedia.SongVoting.ViewModels;
+@model SongViewModel
+
+<h1>@Html.TitleForPage(T("Rediger Sang"))</h1>
+
+
+@using (Html.BeginFormAntiForgeryPost())
+{
+    @Html.ValidationSummary();
+
+    <fieldset>
+        <div id = "editor-label">
+             @Html.LabelFor(m => m.SongTitle, @T("Sangens titel"))
+         </div>
+         <div id = "editor-field">
+              @Html.TextBoxFor(m => m.SongTitle, new { size = "40" })
+            @Html.ValidationMessageFor(m => m.SongTitle)
+        </div>
+        <br />
+        <div id = "editor-label">
+             @Html.LabelFor(m => m.SongAuthor, @T("Sangens forfatter(e)"))
+         </div>
+         <div id = "editor-field">
+              @Html.TextBoxFor(m => m.SongAuthor, new { size = "40" })
+            @Html.ValidationMessageFor(m => m.SongAuthor)
+        </div>
+        <br />
+        <div id = "editor-label">
+             @Html.LabelFor(m => m.SongUrl, @T("Link til YouTube / Soundcloud")) 
+         </div>
+         <div id = "editor-field">
+              @Html.TextBoxFor(m => m.SongUrl, new { size = "60" })
+            @Html.ValidationMessageFor(m => m.SongUrl)
+        </div>
+        <br />
+        <div>
+            <text>
+                <b>
+                    NB: et par tips omkring links til sange..
+                </b>
+            </text><br /><br />
+            <text>
+                <b>
+                    Hvis du linker til en youtube video, skal din url have 'embed' formen:
+                </b>
+            </text><br />
+            <text>
+                https://www.youtube.com/embed/svTU6THTeCQ
+            </text><br /><br />
+            <text>
+                <b>
+                    Hvis du linker til et soundcloud track, skal din url enten have form som denne:
+                </b>
+            </text><br />
+            <text>
+                https://soundcloud.com/naomi-rose-2/buttercup
+            </text><br /><br />
+            <text>
+                <b>
+                    ..eller som et embedded iframe link hentet fra Soundcloud's share knap, af formen:
+                </b>
+            </text><br />
+            <text>
+                iframe width="100%" ... src='https://w.soundcloud.com/player/?url=https' ...
+            </text>
+
+        </div>
+        <br />
+        <br />
+        <div id = "editor-label">
+             @Html.LabelFor(m => m.SongDescription, @T("Kort beskrivelse af den nominerede sang - maks. 255 tegn!"))
+         </div>
+         <div id = "editor-field" >
+              @Html.TextAreaFor(m => m.SongDescription, new { size = "60" })
+            @Html.ValidationMessageFor(m => m.SongDescription)
+        </div>
+        <br />
+        @*Version 'hand made in dk': radio butz based on a string equivalent for the enum in the passed model, niiice*@
+        @*<div class="form-group">
+            @Html.LabelFor(m => m.SongCategory, @T("Vælg en sangkategori:"))<br />
+            @Html.RadioButtonFor(m => m.SongCategory, SongCategory.Original, new { id = SongCategory.Original })
+            <label for=@SongCategory.Original>@SongCategory.Original</label><br />
+            @Html.RadioButtonFor(m => m.SongCategory, SongCategory.Cowrite, new { id = SongCategory.Cowrite })
+            <label for=@SongCategory.Cowrite>@SongCategory.Cowrite</label><br />
+            @Html.RadioButtonFor(m => m.SongCategory, SongCategory.IntOriginal, new { id = SongCategory.IntOriginal })
+            <label for=@SongCategory.IntOriginal>@SongCategory.IntOriginal</label><br />
+            @Html.RadioButtonFor(m => m.SongCategory, SongCategory.IntCowrite, new { id = SongCategory.IntCowrite })
+            <label for=@SongCategory.IntCowrite>@SongCategory.IntCowrite</label><br />
+        </div>*@
+        <br />
+        
+    </fieldset>
+    <br />
+    <input type="hidden" name="SongPartRecordId" value="@Model.SongPartRecordId" />
+    <input type="hidden" name="PollChoiceRecord_Id" value="@Model.PollChoiceRecord_Id" />
+    <input type="hidden" name="SongEditorUserName" value="@Model.SongEditorUserName" />
+    <input type="hidden" name="SongEditorUserItemId" value="@Model.SongEditorUserItemId" />
+    <input type="submit" name="submit.Song" value="Gem Sang" />
+}

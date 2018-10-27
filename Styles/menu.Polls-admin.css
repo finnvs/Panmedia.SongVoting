@@ -1,0 +1,6 @@
+﻿.navicon-polls {
+background-image:url(Images/cross.png) !important;
+}
+.navicon-polls:hover {
+background-position:0 -30px !important;
+}

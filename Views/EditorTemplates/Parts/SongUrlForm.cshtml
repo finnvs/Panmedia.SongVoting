@@ -1,0 +1,53 @@
+﻿@using Panmedia.SongVoting.Models;
+@using Panmedia.SongVoting.ViewModels;
+@model SongUrlViewModel
+
+
+<h1>@Html.TitleForPage(T("Rediger Sang"))</h1>
+
+
+@using (Html.BeginFormAntiForgeryPost())
+{
+    @Html.ValidationSummary();
+
+    <fieldset>        
+        <div id = "editor-label">
+             @Html.LabelFor(m => m.SongTitle, @T("Sangens titel"))
+         </div>
+         <div id = "editor-field">
+              @Html.TextBoxFor(m => m.SongTitle, new { size = "40" })
+            @Html.ValidationMessageFor(m => m.SongTitle)
+        </div>
+        <br />
+        <div id = "editor-label">
+             @Html.LabelFor(m => m.SongAuthor, @T("Sangens forfatter(e)"))
+         </div>
+         <div id = "editor-field">
+              @Html.TextBoxFor(m => m.SongAuthor, new { size = "40" })
+            @Html.ValidationMessageFor(m => m.SongAuthor)
+        </div>
+        <br />
+        <div id = "editor-label">
+             @Html.LabelFor(m => m.SongUrl, @T("Link til YouTube / Soundcloud")) 
+         </div>
+         <div id = "editor-field">
+              @Html.TextBoxFor(m => m.SongUrl, new { size = "60" })
+            @Html.ValidationMessageFor(m => m.SongUrl)
+        </div>
+        <br />
+        <br />
+        <div id = "editor-label">
+             @Html.LabelFor(m => m.SongDescription, @T("Kort beskrivelse af den nominerede sang - maks. 255 tegn!"))
+         </div>
+         <div id = "editor-field" >
+              @Html.TextAreaFor(m => m.SongDescription, new { size = "60" })
+            @Html.ValidationMessageFor(m => m.SongDescription)
+        </div>
+        <br />        
+        <br />
+        
+    </fieldset>
+    <br />
+    <input type="hidden" name="SongPartRecordId" value="@Model.SongPartRecordId" />    
+    <input type="submit" name="submit.Song" value="Gem Sang" />
+}

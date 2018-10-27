@@ -1,0 +1,135 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+@using Orchard.Mvc.Html;
+@using Orchard.Utility.Extensions;
+
+@model AdminIndexViewModel
+@{
+    Layout.Title = T("Polls").ToString();
+}
+
+@using (Html.BeginFormAntiForgeryPost())
+{
+    @Html.ValidationSummary()
+    <fieldset class="bulk-actions">
+        <label for="publishActions">@T("Actions:")</label>
+        <select id="publishActions" name="@Html.NameOf(m => m.Options.BulkAction)">
+            @Html.SelectOption(Model.Options.BulkAction, PollIndexBulkAction.None, T("Choose action...").ToString())
+            @Html.SelectOption(Model.Options.BulkAction, PollIndexBulkAction.Open, T("Open").ToString())
+            @Html.SelectOption(Model.Options.BulkAction, PollIndexBulkAction.Close, T("Close").ToString())
+            @Html.SelectOption(Model.Options.BulkAction, PollIndexBulkAction.Delete, T("Delete").ToString())
+        </select>
+        <button type="submit" name="submit.BulkEdit" value="@T("Apply")">@T("Apply")</button>
+    </fieldset>
+    <fieldset class="bulk-actions">
+        <label for="filterResults">@T("Filter:")</label>
+        <select id="filterResults" name="@Html.NameOf(m => m.Options.Filter)">
+            @Html.SelectOption(Model.Options.Filter, PollIndexFilter.All, T("All Polls").ToString())
+            @Html.SelectOption(Model.Options.Filter, PollIndexFilter.Open, T("Open Polls").ToString())
+            @Html.SelectOption(Model.Options.Filter, PollIndexFilter.Closed, T("Closed Polls").ToString())
+        </select>
+        <button type="submit" name="submit.Filter" value="@T("Apply")">@T("Apply")</button>
+    </fieldset>
+    <br />
+    <fieldset class="bulk-actions">
+        @*<a href="@Url.Action("Create", "Admin", new { area = "Contents", id = "Poll", returnUrl = @ViewContext.RequestContext.HttpContext.Request.ToUrlString() })">Create New Poll</a>*@
+        <a href="@Url.Action("CreatePoll", "Admin", new { area = "Panmedia.SongVoting", id = "Poll", returnUrl = @ViewContext.RequestContext.HttpContext.Request.ToUrlString() })">Create New Poll</a>
+    </fieldset>
+    <fieldset>
+        <table class="items" summary="@T("This is a table of polls in your application")">
+            <colgroup>
+                <col id="Col1" />
+                <col id="Col2" />
+                <col id="Col3" />
+                <col id="Col4" />
+                <col id="Col5" />
+                <col id="Col6" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th scope="col">&nbsp;&darr;</th>
+                    <th scope="col">@T("Status")</th>
+                    <th scope="col">@T("Question")</th>
+                    <th scope="col">@T("Number of choices")</th>
+                    <th scope="col">@T("Info")</th>
+                    <th scope="col">@T("Actions")</th>
+                </tr>
+            </thead>
+            @{var pollIndex = 0;}
+            <tbody>
+                @foreach (var pollEntry in Model.Polls)
+                {
+                    <tr itemscope="itemscope" itemid="@pollEntry.Poll.Id" itemtype="http://orchardproject.net/data/Poll">
+                        <td>
+                            <input type="hidden" value="@pollEntry.Poll.Id" name="@Html.NameOf(m => m.Polls[pollIndex].Poll.Id)"/>
+                            <input type="hidden" value="@pollEntry.Poll.Question" name="@Html.NameOf(m => m.Polls[pollIndex].Poll.Question)"/>
+                            <input type="checkbox" value="true" name="@Html.NameOf(m => m.Polls[pollIndex].IsChecked)"/>
+                        </td>
+                        <td>
+                            @if (pollEntry.Poll.Shown)
+                            { @T("Open") }
+                            else
+                            { @T("Closed") }
+                        </td>
+                        <td>
+                            <div class="Question" itemprop="Question">@pollEntry.Poll.Question</div>
+                        </td>
+                        <td>
+                            <div class="Number-Of-Choices">@pollEntry.NumberOfChoices</div>
+                        </td>
+                        <td>
+                            <div class="Info">
+                                @if (pollEntry.Poll.Shown)
+                                {
+                                    if (DateTime.Now < pollEntry.Poll.CloseDateUtc && DateTime.Now > pollEntry.Poll.OpenDateUtc)
+                                    {
+                                    @T("voting ends in {0:0} days", (pollEntry.Poll.CloseDateUtc.Value - DateTime.Now).TotalDays)
+                                    }
+                                    else if (DateTime.Now < pollEntry.Poll.OpenDateUtc)
+                                    {
+                                    @T("voting opens in {0:0} days", (pollEntry.Poll.OpenDateUtc.Value - DateTime.Now).TotalDays)
+                                    }
+                                    else if (DateTime.Now > pollEntry.Poll.CloseDateUtc)
+                                    {
+                                    @T("closed for {0:0} days", (DateTime.Now - pollEntry.Poll.CloseDateUtc.Value).TotalDays)
+                                    }
+                                }
+                                else
+                                {
+                                    @T("Poll is hidden");
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                @if (pollEntry.Poll.Shown)
+                                {
+                                    <a href="@Url.Action("Close", new { pollEntry.Poll.Id, returnUrl = ViewContext.RequestContext.HttpContext.Request.ToUrlString() })" itemprop="CloseUrl UnsafeUrl">@T("Close")</a>@T(" | ")
+                                }
+                                else
+                                {
+                                    <a href="@Url.Action("Open", new { pollEntry.Poll.Id, returnUrl = ViewContext.RequestContext.HttpContext.Request.ToUrlString() })" itemprop="OpenUrl UnsafeUrl">@T("Open")</a>@T(" | ")
+                                }
+                                <a href="@Url.Action("Edit", new { area = "Contents", id = pollEntry.Poll.Id })" title="@T("Edit")">@T("Edit")</a>@T(" | ")
+                                @* kald til edit metoden på admin controlleren istedet - vil returnere view direkte, uden save knap*@
+                                @*<a href="@Url.Action("Edit", "Admin", new { area = "Panmedia.SongVoting", id = pollEntry.Poll.Id })" title="@T("Edit")">@T("Edit")</a>@T(" | ")*@ 
+                                <a href="@Url.Action("Delete", new { pollEntry.Poll.Id, returnUrl = ViewContext.RequestContext.HttpContext.Request.ToUrlString() })" itemprop="RemoveUrl UnsafeUrl">@T("Delete")</a>@T(" | ")
+                                <a href="@Url.Action("Details", new { pollEntry.Poll.Id, })">@T("Details")</a>@T(" | ")
+                                <a href="@Url.Action("ExportToXml", new { pollEntry.Poll.Id })">@T("Export to XML")</a>
+                            </div>
+                        </td>
+                    </tr>
+                                pollIndex = pollIndex + 1;
+                }
+            </tbody>
+        </table>
+        @Display(Model.Pager)
+
+
+    </fieldset>
+}
+@using (Html.BeginFormAntiForgeryPost(Url.Action("ImportFromXml"), FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    @Html.ValidationSummary()
+    <input type="file" name="FileUpload" />
+    <input type="submit" name="Upload.Submit" value="@T("Upload")" />
+}

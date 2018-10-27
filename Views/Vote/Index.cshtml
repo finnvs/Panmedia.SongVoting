@@ -1,0 +1,83 @@
+﻿@using Orchard.ContentManagement;
+@using Panmedia.SongVoting.ViewModels;
+@using Panmedia.SongVoting.Models;
+
+@*@model IEnumerable<PollPart>*@
+@model PollIndexViewModel
+
+@if (Model.Polls == null || Model.Polls.Count() < 1)
+{
+    if (WorkContext.CurrentCulture == "da-DK")
+    {
+        <p>@T("Ingen aktive afsteminger.")</p>
+    }
+    else
+    {
+        <p>@T("No active polls.")</p>
+    }
+}
+else
+{
+    if (Model.ShowEnterSongBtn)
+    {
+        var actionLinkBtn = Url.Action("Create", "Song", new { Area = "Panmedia.SongVoting" });
+        <p>
+            <div class="row">
+                <div class="col-sm-5">
+                    @if (WorkContext.CurrentCulture == "da-DK")
+                    {
+                        @T("Du kan tilmelde din sang til en afstemning her:")
+                    }
+                    else
+                    {
+                        @T("You can nominate your song for a vote here:")
+                    }
+                    <br />
+                    <br />
+                    @if (WorkContext.CurrentCulture == "da-DK")
+                    {
+                        <a href="@actionLinkBtn" class="btn btn-primary btn-sm">Tilmeld Sang</a>
+                    }
+                    else
+                    {
+                        <a href="@actionLinkBtn" class="btn btn-primary btn-sm">Nominate Song</a>
+                    }
+                    @*@Html.ActionLink("Tilmeld Sang", "Create", "Song")*@
+                </div>
+            </div>
+        </p>
+    }
+    <br />
+    <br />
+    if (WorkContext.CurrentCulture == "da-DK")
+    {
+        <p>@T("Aktive afsteminger:")</p>
+    }
+    else
+    {
+        <p>@T("Active polls:")</p>
+    }
+    <ul class="content-items">
+        @foreach (var poll in Model.Polls) // var or dynamic
+        {
+            string title = poll.ContentItem.Content.TitlePart.Title;
+            ContentItem item = poll.ContentItem;
+            <li class="content-item-summary">
+                @if (WorkContext.CurrentCulture == "da-DK")
+                {
+                    @T("Afstemning: ")
+                }
+                else
+                {
+                    @T("Vote: ")
+                }
+                @*Itemlink: - kald til Orchards standard rendering engine via Contents/Item/Display/338*@
+                @*link er..http://localhost:30321/OrchardLocal/Contents/Item/Display/338*@
+                @*@Html.ItemDisplayLink(title, item)*@
+                @*Actionlink: - kald til specifik controller, for håndtering af 'user voting' scenarier*@
+                @*link er..http://localhost:30321/OrchardLocal/Panmedia.SongVoting/Vote/GetPoll?pollId=338*@
+                @Html.ActionLink(title, "GetPoll", "Vote", new { pollId = poll.ContentItem.Id }, null)
+            </li>
+        }
+    </ul>
+}

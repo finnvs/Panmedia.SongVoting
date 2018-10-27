@@ -1,0 +1,47 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+@model SongViewModel
+
+
+<div class="modal-body">
+    <div class="row">
+        <div class="col-sm-4">
+            Titel:<br />
+            @Model.SongTitle<br />
+            - skrevet af: @Model.SongAuthor
+        </div>
+        <div class="col-sm-4">
+            @*Sang Kategori:<br />
+            @Model.SongCategory*@
+        </div>
+        <div class="col-sm-4">
+            Beskrivelse: <br />
+            @Model.SongDescription
+        </div>
+    </div>
+    <p>
+        @if (Model.SongUrl.Contains("youtube"))
+        {
+            <br />
+            <div class="embed-responsive embed-responsive-16by9">
+                <iframe width="300" height="150" class="embed-responsive-item" src="@Model.SongUrl"></iframe>
+            </div>
+        }
+        else if (Model.SongUrl.Contains("iframe"))
+        {
+            <br />
+            <div>
+                @*@Html.Raw(Model.SongUrl)*@ @*Will produce an XSS alert in Chrome, not showing the page*@
+                @*@Model.SongUrl*@ @*Will produce text output <iframe>... in Chrome, not showing the soundcloud song*@
+                @T("Dit Iframe html link er nu gemt i databasen - gå til afstemningen for at se din sang i et pop-up vindue.")
+            </div>
+        }
+        else
+        {
+            <br />
+            <div>
+                <a href="@Model.SongUrl" target="_blank">Open soundcloud track / other media in new pane</a>
+            </div>
+        }
+    </p>
+
+</div>

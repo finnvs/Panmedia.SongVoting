@@ -1,0 +1,208 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+
+@model AdminDetailsViewModel
+@{
+    Script.Require("JQuery");
+    Script.Require("jQueryUI");
+    Script.Require("JQPlotPlugin");
+    Script.Include("Plugins/jqplot.dateAxisRenderer.min.js");
+    Script.Include("Plugins/jqplot.categoryAxisRenderer.min.js");
+    Script.Include("Plugins/jqplot.canvasTextRenderer.min.js");
+    Script.Include("Plugins/jqplot.canvasAxisTickRenderer.min.js");
+    Script.Include("Plugins/jqplot.cursor.min.js");
+    Script.Include("Plugins/jqplot.pieRenderer.min.js");
+    Script.Include("Plugins/jqplot.barRenderer.min.js");
+    Script.Include("Plugins/jqplot.ohlcRenderer.min.js");
+    Script.Include("Plugins/jqplot.pointLabels.min.js");
+    Style.Require("JQPlotStyle");
+    Style.Require("jQueryUI_Orchard");
+    
+}
+
+<div id="tabs">
+    <ul>
+        <li><a href="#tabs-1">Tab 1</a></li>
+        <li><a href="#tabs-2">Tab 2</a></li>
+    </ul>
+    <div id="tabs-1">
+        <h3 id="Question">@Model.Question</h3>
+        <div id="chart" style="margin-top: 20px; margin-left: 20px;" data-height="350px" data-width="480px"></div>
+    </div>
+
+    <div id="tabs-2">
+        <div>
+            <ul>
+                <li><input type="radio" name="dataSeries" value="all" id="dataSeries_all" /><label for="dataSeries_all" style="display:inline">@T("All")</label></li>
+                <li><input type="radio" name="dataSeries" value="user" id="dataSeries_user" /><label for="dataSeries_user" style="display:inline">@T("Votes by registered users")</label></li>
+                <li><input type="radio" name="dataSeries" value="anonymous" id="dataSeries_anonymous" /><label for="dataSeries_anonymous" style="display:inline">@T("Votes by anonymous users")</label></li>
+            </ul>
+        </div>
+        <p></p>
+        <div id="chart1" data-height="260px" data-width="480px" style="margin-top: 20px; margin-left: 20px;"></div>
+    </div>
+
+</div>
+<div id="accordion" style="width: 300px; height: 400px;"></div>
+
+@using (Script.Foot())
+{
+    <script type="text/javascript">
+        var dataSets = null;
+        $(document).ready(function () {
+            $.jqplot.config.enablePlugins = false;
+
+            @{
+                System.Text.StringBuilder results = new System.Text.StringBuilder();
+                System.Text.StringBuilder ticks = new System.Text.StringBuilder();
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                System.Text.StringBuilder sb2 = new System.Text.StringBuilder();
+                System.Text.StringBuilder sb3 = new System.Text.StringBuilder();
+                System.Text.StringBuilder labels = new System.Text.StringBuilder();
+
+                var orderedList = Model.ResultByChoices.OrderByDescending(r => r.Result.Count).ToList();
+                foreach(var item in orderedList)
+                {
+                    results.Append(String.Format("{0}", item.Result.Count));
+                    ticks.Append(String.Format("\"{0}\"", item.Choice.Answer));
+                            if(orderedList.Last() != item)
+                    {
+                        results.Append(", ");
+                        ticks.Append(",");
+                }
+                        }
+                    }
+                    @foreach (var series in Model.VotesByChoices)
+            {
+                        sb.Append("[");
+                        labels.Append(String.Format("{{label: \"{0}\"}}", series.Choice.Answer));
+                        foreach (var result in series.Results)
+                        {
+                            long ms = (long)Math.Round(new TimeSpan(result.Key.Ticks - new DateTime(1970, 1, 1).Ticks).TotalMilliseconds);
+                            sb.Append(String.Format("[{0},{1}]", ms, result.Value));
+                            if (series.Results.Last().Key != result.Key)
+                            {
+                                sb.Append(",");
+                            }
+                        }
+                        sb.Append("]");
+                        if (Model.VotesByChoices.Last() != series)
+                        {
+                            sb.Append(",");
+                            labels.Append(",");
+                        }
+                    }
+                    @foreach (var series in Model.AnonymVotesByChoices)
+            {
+                        sb2.Append("[");
+                        foreach (var result in series.Results)
+                        {
+                            long ms = (long)Math.Round(new TimeSpan(result.Key.Ticks - new DateTime(1970, 1, 1).Ticks).TotalMilliseconds);
+                            sb2.Append(String.Format("[{0},{1}]", ms, result.Value));
+                            if (series.Results.Last().Key != result.Key)
+                            {
+                                sb2.Append(",");
+                            }
+                        }
+                        sb2.Append("]");
+                        if (Model.AnonymVotesByChoices.Last() != series)
+                        {
+                            sb2.Append(",");
+                        }
+                    }
+                    @foreach (var series in Model.UserVotesByChoices)
+            {
+                        sb3.Append("[");
+                        foreach (var result in series.Results)
+                        {
+                            long ms = (long)Math.Round(new TimeSpan(result.Key.Ticks - new DateTime(1970, 1, 1).Ticks).TotalMilliseconds);
+                            sb3.Append(String.Format("[{0},{1}]", ms, result.Value));
+                            if (series.Results.Last().Key != result.Key)
+                            {
+                                sb3.Append(",");
+                            }
+                        }
+                        sb3.Append("]");
+                        if (Model.UserVotesByChoices.Last() != series)
+                        {
+                            sb3.Append(",");
+                        }
+                    }
+
+            $("#tabs").tabs();
+            //$('#chart').attr('data-width', $('#tabs-1').width() + 'px');
+            $('#chart1').attr('data-width', $('#tabs-1').width() + 'px');
+
+                    dataSets = {
+                        all: [@Html.Raw(sb.ToString())],
+                anonymous: [@Html.Raw(sb2.ToString())],
+                user: [@Html.Raw(sb3.ToString())]
+                    };
+
+                    plot1 = $.jqplot("chart1", dataSets.all, {
+                        title: '@T("Time statistics")',
+                stackSeries: true,
+                animate: true,
+                series: [@Html.Raw(labels.ToString())],
+                seriesDefaults: { renderer: $.jqplot.BarRenderer },
+                axes: {
+                            xaxis: {
+                                renderer: $.jqplot.DateAxisRenderer,                
+                        tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+                        tickOptions: {
+                                    formatString: '%B %d',
+                            angle: -30
+                        },
+                        tickInterval:'1 days'
+                            }
+                        },      
+                legend: {
+                            show: true,
+                    location: 'e',
+                    placement: 'outsideGrid'
+                },
+                cursor: {
+                            show: true,
+                    zoom: true
+                }
+                    });
+
+                    var ticks = [@Html.Raw(ticks.ToString())];
+                    plot2 = $.jqplot('chart', [[@Html.Raw(results.ToString())]], {
+                        seriesDefaults: {
+                            renderer: $.jqplot.BarRenderer,
+                    pointLabels: { show: true, location: 'e', edgeTolerance: -15, placement: 'outside' },
+                    shadowAngle: 135,
+                    rendererOptions: {
+                                barDirection: 'horizontal',
+                        varyBarColor: true
+                    }
+                        },
+                axes: {
+                            yaxis: {
+                                renderer: $.jqplot.CategoryAxisRenderer,
+                        ticks: ticks
+                            }
+                        }
+                    });
+
+            $('#tabs').bind('tabsshow', function (event, ui) {
+                    if (ui.index === 0 && plot2._drawCount === 0) {
+                        plot2.replot();
+                    }
+                    if (ui.index === 1 && plot1._drawCount === 0) {
+                        plot1.replot();
+                    }
+                });
+
+            $("input[type=radio][name=dataSeries]").attr("checked", false);
+            $("input[type=radio][name=dataSeries][value=all]").attr("checked", true);
+            $("input[type=radio][name=dataSeries]").change(function () {
+                    var val = $(this).val();
+                    for (var i = 0; i < dataSets[val].length; i++) {
+                        plot1.series[i].data = dataSets[val][i];
+                    }
+                    plot1.replot();
+                });
+                });
+    </script>
+}

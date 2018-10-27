@@ -1,0 +1,104 @@
+﻿@using Panmedia.SongVoting.ViewModels;
+
+@model SongDetailsViewModel
+@{
+    Script.Require("JQuery");
+    Script.Require("jQueryUI");
+    Script.Require("JQPlotPlugin");
+    Script.Include("Plugins/jqplot.dateAxisRenderer.min.js");
+    Script.Include("Plugins/jqplot.categoryAxisRenderer.min.js");
+    Script.Include("Plugins/jqplot.canvasTextRenderer.min.js");
+    Script.Include("Plugins/jqplot.canvasAxisTickRenderer.min.js");
+    Script.Include("Plugins/jqplot.cursor.min.js");
+    Script.Include("Plugins/jqplot.pieRenderer.min.js");
+    Script.Include("Plugins/jqplot.barRenderer.min.js");
+    Script.Include("Plugins/jqplot.ohlcRenderer.min.js");
+    Script.Include("Plugins/jqplot.pointLabels.min.js");
+    Style.Require("JQPlotStyle");
+    Style.Require("jQueryUI_Orchard");
+    
+}
+
+<div id="tabs">
+    <ul>
+        <li><a href="#tabs-1">Tab 1</a></li>
+        <li><a href="#tabs-2">Tab 2</a></li>
+    </ul>
+    <div id="tabs-1">
+        <h3 id="SongTitle">@Model.SongTitleAndAuthor</h3>
+        <div id="chart" style="margin-top: 20px; margin-left: 20px;" data-height="350px" data-width="480px"></div>
+    </div>
+</div>
+<div id="accordion" style="width: 300px; height: 400px;"></div>
+
+@using (Script.Foot())
+{
+    <script type="text/javascript">
+        var dataSets = null;
+        $(document).ready(function () {
+            $.jqplot.config.enablePlugins = false;
+
+            @{
+                System.Text.StringBuilder results = new System.Text.StringBuilder();
+                System.Text.StringBuilder ticks = new System.Text.StringBuilder();
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();                
+                System.Text.StringBuilder labels = new System.Text.StringBuilder();
+
+                var orderedList = Model.VotesByUser.OrderByDescending(r => r.NumberOfVotesByUser.Count).ToList();
+                foreach(var item in Model.VotesByUser)
+                {
+                    results.Append(String.Format("{0}", item.NumberOfVotesByUser.Count));
+                    ticks.Append(String.Format("\"{0}\"", item.UserFullName));
+                    if(orderedList.Last() != item)
+                    {
+                        results.Append(", ");
+                        ticks.Append(",");
+                    }
+                }
+                    }
+                    @foreach (var series in Model.VotesByUser)
+            {
+                        sb.Append("[");
+                        labels.Append(String.Format("{{label: \"{0}\"}}", series.UserFullName));
+                        foreach (var result in series.NumberOfVotesByUser)
+                        {
+                            sb.Append(String.Format("[{0},{1}]", result.VoteDateUtc, result.Username));
+                            if (series.NumberOfVotesByUser.Last() != result)
+                            {
+                                sb.Append(",");
+                            }
+                        }
+                        sb.Append("]");
+                        if (Model.VotesByUser.Last() != series)
+                        {
+                            sb.Append(",");
+                            labels.Append(",");
+                        }
+                    }
+                    
+
+            $("#tabs").tabs();
+            $('#chart').attr('data-width', $('#tabs-1').width() + 'px');
+           
+
+                    var ticks = [@Html.Raw(ticks.ToString())];
+                    plot2 = $.jqplot('chart', [[@Html.Raw(results.ToString())]], {
+                        seriesDefaults: {
+                            renderer: $.jqplot.BarRenderer,
+                    pointLabels: { show: true, location: 'e', edgeTolerance: -15, placement: 'outside' },
+                    shadowAngle: 135,
+                    rendererOptions: {
+                                barDirection: 'horizontal',
+                        varyBarColor: true
+                    }
+                        },
+                axes: {
+                            yaxis: {
+                                renderer: $.jqplot.CategoryAxisRenderer,
+                        ticks: ticks
+                            }
+                        }
+                    });
+            });
+    </script>
+}
